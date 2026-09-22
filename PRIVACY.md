@@ -33,6 +33,33 @@ an operator) later add Egress, transcript logging, or any analytics SDK to your
 deployment, that changes this picture — update your own privacy notice
 accordingly.
 
+## Infrastructure-level logs (self-hosted deploy)
+
+The above is about the *application*. If an operator uses this repo's
+`compose.yaml` + `Caddyfile` reference deployment (see
+[SETUP.md](SETUP.md#all-in-one-with-docker-compose--caddy)), two more sources
+of data exist that aren't part of the app's own code:
+
+- **Caddy's access logs.** The `Caddyfile` here has no `log` directive, so
+  Caddy doesn't write structured access logs to a file by default — but its
+  process output (which includes connection-level info) still goes to
+  `docker compose logs caddy`, and Docker's default logging driver persists
+  container stdout/stderr to disk on the host (rotated, not shipped anywhere)
+  until that container is removed.
+- **The `web` and `translator` containers' own logs** (`console.log`/Python
+  `logging` output, e.g. the router's `logger.info(...)` calls in
+  `translator/src/router.py`) go the same way — to `docker compose logs`,
+  retained on the host per Docker's log rotation, not sent to any external
+  logging or analytics service by this codebase.
+
+None of this is shipped off the host by anything in this repo. It's readable
+only by whoever has shell access to the machine running `docker compose`, and
+it's the kind of infrastructure log that's normal for any reverse-proxied web
+service — but it does mean the "not persisted" claims elsewhere in this
+document are about the *application's* handling of the data in that Data
+table, not a guarantee that no request metadata (IP address, timestamp) is
+ever written to disk anywhere in a self-hosted deployment.
+
 ## Third parties involved
 
 Running a call necessarily sends data to two services you configure with your
@@ -92,6 +119,10 @@ link somewhere public if the conversation shouldn't be public.
   session/tab lifetime.
 
 ## If you deploy this
+
+See also [SECURITY.md](SECURITY.md) for how secrets are (and aren't) kept out
+of the deployed images — a data-handling document isn't complete without
+knowing the credentials involved aren't leaking somewhere unintended.
 
 If you run an instance of this app for anyone other than yourself:
 

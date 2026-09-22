@@ -4,7 +4,7 @@ Multi-language **voice** calls. Everyone picks their language. Translation spins
 
 Powered by [LiveKit Agents](https://docs.livekit.io/agents/) (Python worker) and the [Gemini Live API](https://ai.google.dev/gemini-api/docs/live).
 
-![architecture](https://img.shields.io/badge/architecture-peer--call-5B21B6) ![agent](https://img.shields.io/badge/agent-python-3776AB) ![web](https://img.shields.io/badge/web-nextjs-000000)
+![architecture](https://img.shields.io/badge/architecture-peer--call-5B21B6) ![agent](https://img.shields.io/badge/agent-python-3776AB) ![web](https://img.shields.io/badge/web-nextjs-000000) [![CI](https://github.com/vimaneti-ai/global-voice/actions/workflows/ci.yml/badge.svg)](https://github.com/vimaneti-ai/global-voice/actions/workflows/ci.yml)
 
 ---
 
@@ -74,6 +74,7 @@ gemini-live-translate-livekit/
 ├── src/                                 # Next.js 16 frontend
 │   ├── app/
 │   │   ├── page.tsx                     # Landing
+│   │   ├── icon.tsx                     # Generated favicon/app icon
 │   │   ├── globals.css                  # Design tokens + shared component styles
 │   │   ├── api/token/route.ts           # Mints token + dispatches translator agent
 │   │   └── session/[id]/
@@ -88,28 +89,41 @@ gemini-live-translate-livekit/
 │   └── lib/
 │       ├── languages.ts                 # Supported languages + "none" sentinel
 │       └── config.ts                    # Caps, attribute keys
-└── translator/                          # Python LiveKit Agents worker
-    ├── src/
-    │   ├── agent.py                     # @server.rtc_session(agent_name="gemini-translator")
-    │   ├── router.py                    # TranslationRouter (reconcile loop)
-    │   ├── session.py                   # GeminiSession (one per speaker→target pair)
-    │   ├── audio.py                     # PCM glue
-    │   └── config.py                    # Model id, debounce, grace, etc.
-    ├── tests/test_router.py             # Demand-set computation
-    ├── pyproject.toml
-    └── Dockerfile                       # For LiveKit Cloud Agents deploy
+├── translator/                          # Python LiveKit Agents worker
+│   ├── src/
+│   │   ├── agent.py                     # @server.rtc_session(agent_name="gemini-translator")
+│   │   ├── router.py                    # TranslationRouter (reconcile loop)
+│   │   ├── session.py                   # GeminiSession (one per speaker→target pair)
+│   │   ├── audio.py                     # PCM glue
+│   │   └── config.py                    # Model id, debounce, grace, etc.
+│   ├── tests/test_router.py             # Demand-set computation
+│   ├── pyproject.toml
+│   └── Dockerfile                       # For LiveKit Cloud Agents or self-hosted deploy
+├── compose.yaml                         # Self-hosted: web + translator + Caddy together
+├── Caddyfile                            # Reverse proxy + automatic HTTPS for the compose deploy
+├── Dockerfile                           # Frontend container image
+└── .github/workflows/ci.yml             # Lint + build (web), lint + format + test (translator)
 ```
 
 ## Deploy
 
-**Agent** — to LiveKit Cloud Agents:
+Two ways to run this in production:
+
+**Split** — agent to LiveKit Cloud Agents, frontend anywhere that runs Next.js:
 ```bash
 cd translator
 lk agent create --secrets-file .env.local .   # first time
 lk agent deploy                               # subsequent deploys
 ```
+The frontend needs no special config on Vercel since the only API route is
+`/api/token` and it's stateless; container hosts (Cloud Run, Fly.io, Render,
+etc.) can use the included `Dockerfile`.
 
-**Frontend** — anywhere that runs Next.js. The repo includes a `Dockerfile` for container deploys (Cloud Run, Fly.io, Render, etc.). For Vercel, no special config needed since the only API route is `/api/token` and it's stateless.
+**All-in-one** — `compose.yaml` + `Caddyfile` at the repo root run the
+frontend, the agent, and a Caddy reverse proxy (automatic HTTPS) together on a
+single host. This is what actually runs this project's own deployment. See
+[SETUP.md](SETUP.md#all-in-one-with-docker-compose--caddy) for the full
+walkthrough (DNS, `.env.web`/`.env.agent`, verification).
 
 Set on the frontend host:
 - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`
@@ -117,7 +131,7 @@ Set on the frontend host:
 Set on the agent host:
 - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `GEMINI_API_KEY`
 
-See [SETUP.md](SETUP.md#deploying) for the full deploy walkthrough.
+See [SETUP.md](SETUP.md#deploying) for the full deploy walkthrough either way.
 
 ## Configuration
 
@@ -143,9 +157,17 @@ Caps in `src/lib/config.ts` and `translator/src/config.py` — adjust together:
 - **Typography** — Inter (UI), JetBrains Mono (labels/status)
 - **Package management** — `pnpm` + `uv`
 
-## Privacy
+## More docs
 
-This is self-hosted example software with no accounts and no database — see [PRIVACY.md](PRIVACY.md) for what data (mic audio, display name, language choice) flows to LiveKit and Gemini, and what operators deploying it publicly should consider.
+| Doc | Covers |
+|---|---|
+| [SETUP.md](SETUP.md) | Full setup, running, Docker, deploying (both paths), troubleshooting |
+| [PRIVACY.md](PRIVACY.md) | What data (mic audio, display name, language choice) flows to LiveKit and Gemini, what's persisted (nothing), and what operators deploying this publicly should consider |
+| [SECURITY.md](SECURITY.md) | How secrets are kept out of the web image, how to report a real security issue |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Branch/PR flow, commit style, pre-PR checks |
+| [translator/README.md](translator/README.md) | Running, testing, and deploying the agent on its own |
+
+This is self-hosted example software with no accounts and no database.
 
 ## License
 
