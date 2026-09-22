@@ -41,6 +41,8 @@ export default function RoomClient({ sessionId }: { sessionId: string }) {
       router.replace(`/session/${sessionId}`);
       return;
     }
+    // Restore browser-only values after hydration; they are unavailable to SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayName(name);
     setInitialLang(lang);
   }, [router, sessionId]);
@@ -103,8 +105,7 @@ export default function RoomClient({ sessionId }: { sessionId: string }) {
     <LiveKitRoom
       token={token}
       serverUrl={serverUrl}
-      // Camera + mic default OFF (grill Q12); user opts in via the control bar.
-      video={false}
+      // Mic defaults OFF; the user opts in via the control bar.
       audio={false}
       connect={true}
       onDisconnected={handleLeave}
