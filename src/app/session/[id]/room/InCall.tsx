@@ -10,8 +10,7 @@ import { ConnectionState, ParticipantKind, RoomEvent } from "livekit-client";
 import { PARTICIPANT_LANG_ATTR } from "@/lib/config";
 import { getLanguageByCode } from "@/lib/languages";
 import { useTranslationRouting } from "./useTranslationRouting";
-import VideoGrid from "./VideoGrid";
-import SelfView from "./SelfView";
+import ParticipantCard from "./ParticipantCard";
 import ControlBar from "./ControlBar";
 import LanguagePill from "./LanguagePill";
 import CaptionsSidebar from "./CaptionsSidebar";
@@ -94,9 +93,16 @@ export default function InCall({
           {humanRemotes.length === 0 ? (
             <EmptyStage inviteUrl={inviteUrl} />
           ) : (
-            <VideoGrid participants={humanRemotes} myLang={lang} />
+            <div className="participant-list">
+              {humanRemotes.map((participant) => (
+                <ParticipantCard
+                  key={participant.identity}
+                  participant={participant}
+                  myLang={lang}
+                />
+              ))}
+            </div>
           )}
-          <SelfView />
         </main>
 
         {/* Control bar */}

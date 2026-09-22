@@ -26,7 +26,7 @@ export default function Home() {
           className="body enter-d1"
           style={{ maxWidth: 340, margin: "0 auto 48px" }}
         >
-          Multi-language video calls. Everyone picks their language.
+          Multi-language voice calls. Everyone picks their language.
           Translation spins up on demand.
         </p>
 
@@ -61,7 +61,7 @@ export default function Home() {
         >
           <hr className="rule" />
           {[
-            "Pick your language and turn on your camera",
+            "Pick your language and turn on your microphone",
             "Share the link with everyone joining the call",
             "Each language pair spins up one Gemini session on demand",
           ].map((text, i) => (

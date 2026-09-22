@@ -24,6 +24,8 @@ export default function PreFlightPage({
     if (typeof window === "undefined") return;
     const savedName = window.sessionStorage.getItem(STORAGE_KEY_NAME);
     const savedLang = window.sessionStorage.getItem(STORAGE_KEY_LANG);
+    // Restore browser-only values after hydration; they are unavailable to SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setDisplayName(savedName);
     if (savedLang) setLang(savedLang);
   }, []);
@@ -110,7 +112,7 @@ export default function PreFlightPage({
         </div>
 
         <p className="mono enter-d4" style={{ marginTop: 32 }}>
-          Camera and mic stay off until you turn them on.
+          Your microphone stays off until you turn it on.
         </p>
       </div>
     </div>

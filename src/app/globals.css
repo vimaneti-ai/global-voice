@@ -503,125 +503,80 @@ body {
 }
 
 /* ——————————————————————————————————————
-   Tiles
+   Voice participants
    —————————————————————————————————————— */
 
-.tile-grid {
+.participant-list {
   flex: 1;
-  display: grid;
-  gap: 16px;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  width: 100%;
+  gap: 12px;
+  width: min(560px, 100%);
   margin: 0 auto;
 }
 
-.tile {
-  position: relative;
-  background: var(--bg-inset);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  aspect-ratio: 16 / 9;
-  width: 100%;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.4s ease;
-  animation: tile-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.tile-speaking {
-  border-color: var(--accent);
-  box-shadow:
-    inset 0 0 0 1px var(--accent),
-    0 0 0 4px rgba(200, 67, 43, 0.08);
-}
-
-.tile-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.tile-placeholder {
-  position: absolute;
-  inset: 0;
+.participant-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      var(--bg-inset),
-      var(--bg-inset) 12px,
-      rgba(0, 0, 0, 0.015) 12px,
-      rgba(0, 0, 0, 0.015) 24px
-    );
+  gap: 16px;
+  padding: 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  animation: participant-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-.tile-placeholder-initial {
-  font-family: var(--font-display);
-  font-size: clamp(60px, 9vw, 120px);
-  color: var(--fg-ghost);
-  letter-spacing: -0.04em;
+.participant-card--speaking {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(200, 67, 43, 0.08);
 }
 
-.tile-name {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  right: 0;
+.participant-avatar {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 12px 14px;
-  background: linear-gradient(
-    to top,
-    rgba(26, 25, 23, 0.78) 0%,
-    rgba(26, 25, 23, 0.55) 50%,
-    transparent 100%
-  );
-  color: var(--bg);
-  font-family: var(--font-body);
-  font-size: 13px;
-  pointer-events: none;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  color: var(--fg-tertiary);
+  font-family: var(--font-display);
+  font-size: 28px;
 }
 
-.tile-name-text {
+.participant-details {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.participant-name {
+  overflow: hidden;
   font-weight: 500;
-  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tile-badge {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+.participant-language,
+.participant-muted {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
-  background: rgba(246, 244, 240, 0.12);
-  border: 1px solid rgba(246, 244, 240, 0.16);
-  color: var(--bg);
+  color: var(--fg-tertiary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
-.tile-badge.connecting {
-  background: rgba(160, 123, 26, 0.25);
-  border-color: rgba(160, 123, 26, 0.45);
+.participant-muted {
+  flex: 0 0 auto;
 }
 
-.tile-mic-off {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(26, 25, 23, 0.78);
-  color: var(--bg);
-}
-
-@keyframes tile-enter {
+@keyframes participant-enter {
   from {
     opacity: 0;
     transform: translateY(8px) scale(0.99);
@@ -630,58 +585,6 @@ body {
     opacity: 1;
     transform: none;
   }
-}
-
-/* Speaking pulse — a faint outer halo. */
-@keyframes speak-pulse {
-  0%, 100% { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 4px rgba(200,67,43,0.06); }
-  50%      { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 8px rgba(200,67,43,0.12); }
-}
-
-.tile-speaking {
-  animation: tile-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both, speak-pulse 1.6s ease-in-out infinite;
-}
-
-/* ——————————————————————————————————————
-   Self-view
-   —————————————————————————————————————— */
-
-.self-view {
-  position: absolute;
-  bottom: 18px;
-  right: 18px;
-  width: 200px;
-  aspect-ratio: 16 / 9;
-  background: var(--bg-inset);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: 0 8px 30px rgba(26, 25, 23, 0.12);
-  z-index: 5;
-  transition: transform 0.25s ease;
-}
-
-.self-view:hover {
-  transform: translateY(-2px);
-}
-
-.self-view-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1);
-}
-
-.self-view-empty {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--fg-tertiary);
-  text-transform: uppercase;
 }
 
 /* ——————————————————————————————————————
