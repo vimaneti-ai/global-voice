@@ -30,7 +30,14 @@
   --radius-sm: 7px;
   --radius-md: 12px;
   --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-pill: 999px;
+
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px rgba(17, 17, 24, 0.08), 0 2px 8px rgba(17, 17, 24, 0.04);
+  --glass-blur: blur(20px) saturate(180%);
 }
 
 *,
@@ -53,7 +60,14 @@ body {
   font-size: 15px;
   line-height: 1.6;
   color: var(--fg);
-  background: var(--bg);
+  /* Ambient color blobs so glass surfaces (buttons, cards, panels) have
+     something to actually look translucent against — flat white behind a
+     frosted-glass element is indistinguishable from an opaque one. */
+  background:
+    radial-gradient(900px 500px at 12% -10%, rgba(91, 33, 182, 0.08), transparent 60%),
+    radial-gradient(800px 500px at 100% 100%, rgba(8, 145, 178, 0.06), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
@@ -177,12 +191,15 @@ body {
 }
 
 .btn-dark {
-  background: var(--accent);
+  background: rgba(91, 33, 182, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-dark:hover {
-  opacity: 0.88;
+  background: rgba(91, 33, 182, 0.98);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(91, 33, 182, 0.25);
 }
@@ -195,13 +212,17 @@ body {
 }
 
 .btn-outline {
-  background: transparent;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--fg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .btn-outline:hover {
-  border-color: var(--fg);
+  border-color: var(--fg-tertiary);
+  transform: translateY(-1px);
 }
 
 .btn-ghost {
@@ -217,9 +238,11 @@ body {
 }
 
 .btn-danger {
-  background: transparent;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--error);
-  border: 1px solid var(--error);
+  border: 1px solid rgba(220, 38, 38, 0.4);
   border-radius: var(--radius-sm);
   padding: 12px 24px;
   font-family: var(--font-body);
@@ -231,6 +254,7 @@ body {
 
 .btn-danger:hover {
   background: var(--error-soft);
+  border-color: var(--error);
 }
 
 /* ——————————————————————————————————————
@@ -242,8 +266,12 @@ body {
 }
 
 .card {
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
   padding: 28px;
 }
 
@@ -257,8 +285,10 @@ body {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--fg);
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2344445A' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
@@ -369,11 +399,14 @@ body {
    —————————————————————————————————————— */
 
 .qr-wrap {
+  /* Background stays fully opaque white (not glass) on purpose — a QR code
+     needs a solid, high-contrast quiet zone to stay reliably scannable. */
   padding: 12px;
   background: white;
   display: inline-block;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  box-shadow: var(--glass-shadow);
 }
 
 /* ——————————————————————————————————————
@@ -471,11 +504,8 @@ body {
   flex-direction: row;
   overflow: hidden;
   background:
-    radial-gradient(
-      1200px 600px at 50% -20%,
-      rgba(91, 33, 182, 0.05),
-      transparent 70%
-    ),
+    radial-gradient(1100px 600px at 12% -10%, rgba(91, 33, 182, 0.12), transparent 60%),
+    radial-gradient(900px 600px at 92% 105%, rgba(8, 145, 178, 0.1), transparent 60%),
     var(--bg);
 }
 
@@ -485,6 +515,12 @@ body {
   min-width: 0; /* let the flex item shrink below content's intrinsic width */
   display: grid;
   grid-template-rows: auto 1fr auto;
+  /* Without an explicit column, the single implicit column is sized by the
+     widest row's automatic minimum content width (e.g. the participant
+     list), which can exceed the viewport on narrow phones and push every
+     row — including the control bar — wider than the screen. minmax(0, 1fr)
+     lets the column actually shrink to the available width. */
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
 }
 
@@ -537,16 +573,29 @@ body {
   align-items: center;
   gap: 16px;
   padding: 18px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-  animation: participant-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  /* No fill-mode: CSS animations outrank normal rules for the properties they
+     drive for as long as they're "filling" (e.g. with `both`/`forwards`), which
+     would permanently block the :hover transform below. Both keyframe
+     endpoints already match the property's initial value, so dropping the
+     fill mode changes nothing about the entrance, just lets it release. */
+  animation: participant-enter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.participant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(17, 17, 24, 0.1), 0 2px 8px rgba(17, 17, 24, 0.04);
 }
 
 .participant-card--speaking {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  box-shadow: 0 0 0 4px var(--accent-soft), var(--glass-shadow);
 }
 
 .participant-avatar {
@@ -612,10 +661,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  padding: 14px 24px;
-  border-top: 1px solid var(--border-light);
-  background: var(--bg);
+  gap: 2px;
+  width: fit-content;
+  margin: 0 auto 22px;
+  padding: 8px;
+  background: #ffffff99;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--glass-shadow);
 }
 
 .ctrl {
@@ -628,8 +683,8 @@ body {
   min-width: 76px;
   background: transparent;
   color: var(--fg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -639,7 +694,7 @@ body {
 
 .ctrl:hover {
   color: var(--fg);
-  border-color: var(--fg-tertiary);
+  background: var(--bg-elevated);
 }
 
 .ctrl--active {
@@ -650,16 +705,18 @@ body {
 
 .ctrl--active:hover {
   color: #fff;
+  background: var(--accent);
   border-color: var(--accent);
 }
 
 .ctrl--warning {
   color: var(--warning);
-  border-color: rgba(180, 83, 9, 0.4);
+  border-color: transparent;
 }
 
 .ctrl--warning:hover {
   color: var(--warning);
+  background: var(--warning-soft);
   border-color: var(--warning);
 }
 
@@ -671,7 +728,9 @@ body {
 }
 
 .ctrl-leave {
-  margin-left: 16px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
 }
 
 /* ——————————————————————————————————————
@@ -684,9 +743,12 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-pill);
+  box-shadow: var(--glass-shadow);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--fg);
@@ -741,6 +803,9 @@ body {
   display: inline-block;
   margin-bottom: 18px;
   padding: 6px 12px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(91, 33, 182, 0.25);
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
@@ -754,10 +819,13 @@ body {
   margin-top: 28px;
   display: flex;
   align-items: stretch;
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg-elevated);
+  box-shadow: var(--glass-shadow);
 }
 
 .invite-card-url {
@@ -775,7 +843,9 @@ body {
 
 .invite-card-btn {
   padding: 0 18px;
-  background: var(--accent);
+  background: rgba(91, 33, 182, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -799,7 +869,11 @@ body {
   flex-shrink: 0;
   width: 0;
   overflow: hidden;
-  background: var(--bg);
+  /* A bit more opaque than other glass surfaces — this panel holds a column
+     of body text, and readability wins over translucency for a large area. */
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-left: 1px solid transparent;
   /* Smooth, slightly longer easing avoids the snap. Material standard
      curve for entering/exiting elements. */
@@ -814,7 +888,7 @@ body {
 
 .room-shell--captions-open .captions {
   width: min(380px, 92vw);
-  border-left-color: var(--border);
+  border-left-color: var(--glass-border);
 }
 
 .captions-inner {
@@ -840,16 +914,18 @@ body {
 .captions-close {
   background: none;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   color: var(--fg-secondary);
   font-family: var(--font-mono);
   font-size: 11px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 .captions-close:hover {
   color: var(--fg);
+  background: var(--bg-elevated);
   border-color: var(--fg-tertiary);
 }
 
@@ -925,5 +1001,28 @@ body {
 
   .btn-dark {
     width: 100%;
+  }
+
+  /* The floating control-bar pill is `width: fit-content` with four
+     `min-width: 76px` buttons — below ~334px that overflows the viewport.
+     Let it fill the available width instead and let each .ctrl share it.
+     `.control-bar` is itself a grid item of `.room`, so it also needs its
+     own `min-width: 0` — otherwise its default automatic minimum size (the
+     min-content width of its un-shrunk children) overrides the `width`
+     below and it overflows anyway, even with `.ctrl` set to shrink. */
+  .control-bar {
+    width: calc(100% - 24px);
+    min-width: 0;
+  }
+
+  .ctrl {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 6px;
+  }
+
+  .ctrl-leave {
+    margin-left: 2px;
+    padding-left: 6px;
   }
 }
