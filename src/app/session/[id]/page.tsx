@@ -27,7 +27,9 @@ export default function PreFlightPage({
     // Restore browser-only values after hydration; they are unavailable to SSR.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedName) setDisplayName(savedName);
-    if (savedLang) setLang(savedLang);
+    if (PICKER_LANGUAGES.some(({ code }) => code === savedLang)) {
+      setLang(savedLang!);
+    }
   }, []);
 
   function handleJoin() {
