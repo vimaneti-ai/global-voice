@@ -16,6 +16,9 @@ each half on its own, Docker, deploying, and troubleshooting.
 Optional, only needed if you'll deploy the agent to LiveKit Cloud Agents:
 - [`livekit-cli`](https://docs.livekit.io/home/cli/cli-setup/) (`lk`) — `brew install livekit-cli` (macOS), `curl -sSL https://get.livekit.io/cli | bash` (Linux), `winget install LiveKit.LiveKitCLI` (Windows)
 
+Optional, only needed for the Docker/Docker Compose paths ([§7](#7-docker), [self-hosted deploy](#all-in-one-with-docker-compose--caddy)):
+- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose version` should work, not just `docker-compose`)
+
 ## 2. Get credentials
 
 ### LiveKit Cloud
@@ -110,9 +113,12 @@ uv run ruff format     # format
 
 ## 7. Docker
 
-Each half has its own `Dockerfile`; there's no docker-compose wiring them together, so build/run them separately with matching env vars.
+Each half has its own `Dockerfile` for building/running standalone. If you want
+both services (plus TLS) wired together in one command, skip ahead to
+[Deploying → All-in-one with Docker Compose](#all-in-one-with-docker-compose--caddy) —
+that's what `compose.yaml` at the repo root is for.
 
-**Frontend:**
+**Frontend, standalone:**
 ```bash
 docker build -t live-translate-web .
 docker run -p 8080:8080 \
@@ -122,7 +128,7 @@ docker run -p 8080:8080 \
   live-translate-web
 ```
 
-**Agent:**
+**Agent, standalone:**
 ```bash
 cd translator
 docker build -t live-translate-agent .
@@ -152,6 +158,57 @@ The agent's Dockerfile also runs on any container host if you'd rather self-host
 
 Whichever LiveKit project's credentials you put on the frontend, the agent needs to be deployed against that same project — otherwise the frontend dispatches an agent that never shows up because it's listening on a different project.
 
+### All-in-one with Docker Compose + Caddy
+
+The repo root also has `compose.yaml` and a `Caddyfile` — this is the reference
+setup for running everything on one VM (what's actually behind this project's
+live deployment): the frontend, the agent, and [Caddy](https://caddyfiles.com/)
+as a reverse proxy that gets you HTTPS for free via automatic Let's Encrypt
+certificates. Three services:
+
+| Service | What it runs | Exposed |
+|---|---|---|
+| `web` | The frontend's `Dockerfile`, listening on `8080` | Only to `caddy`, via Docker's internal network (`expose`, not `ports`) |
+| `translator` | The agent's `Dockerfile` | Nothing — it dials out to `LIVEKIT_URL`, same as always |
+| `caddy` | `caddy:2-alpine`, reverse-proxying to `web:8080` | `80` and `443` (TCP + UDP for HTTP/3) |
+
+Steps, on a host with Docker and Docker Compose installed and a domain's DNS
+A/AAAA record already pointed at it:
+
+1. Edit `Caddyfile` — replace `voice.vinodmaneti.com` with your own domain.
+   Caddy will request and renew its TLS certificate for whatever domain is in
+   there automatically; it needs ports 80 and 443 reachable from the internet
+   to do the Let's Encrypt HTTP-01/TLS-ALPN challenges.
+2. Create `.env.web` (same three vars as `.env.example`) and `.env.agent`
+   (same four as `translator/.env.example`) in the repo root on the host —
+   templates are at [`.env.web.example`](.env.web.example) and
+   [`.env.agent.example`](.env.agent.example). These filenames are what
+   `compose.yaml`'s `env_file:` directives expect; they're **not** the same
+   files as local dev's `.env.local` / `translator/.env.local`, even though
+   the contents are the same shape.
+3. Build and start everything:
+   ```bash
+   docker compose up -d --build
+   ```
+4. Verify:
+   ```bash
+   docker compose ps                        # all three should be "running"
+   curl -I https://your-domain              # expect HTTP/2 200
+   docker compose logs --tail=50 web
+   docker compose logs --tail=50 translator # watch for repeating errors in either
+   ```
+   Then open the site in a browser and hard-refresh (`Cmd+Shift+R` /
+   `Ctrl+Shift+R`) to bypass any cached assets from a previous deploy.
+5. Redeploying after a code change: `docker compose up -d --build` again.
+   Compose only rebuilds/restarts a service whose build context actually
+   changed — if you only touched frontend files, the `translator` container is
+   left running as-is (an old "uptime" on `docker compose ps` for a service you
+   didn't touch is expected, not a sign the redeploy failed).
+
+This path deliberately keeps `.dockerignore` excluding `translator/` and `.env*`
+from the `web` image's build context — see [SECURITY.md](SECURITY.md) for why
+that matters here specifically.
+
 ## Troubleshooting
 
 **"LiveKit credentials not configured" (500 from `/api/token`)**
@@ -174,3 +231,16 @@ Whichever LiveKit project's credentials you put on the frontend, the agent needs
 
 **Testing on a phone or a second device**
 `localhost:3000` only works from the machine running the dev server. Either deploy somewhere reachable, or tunnel it (e.g. `ngrok http 3000`) and open the tunnel URL on the second device — note this also exposes your local dev server to that tunnel URL, so don't leave it running unattended.
+
+**Docker Compose: Caddy won't get a TLS certificate / `curl` hangs or times out**
+Caddy's automatic HTTPS needs your domain's DNS already pointed at the host
+*and* ports 80 and 443 open to the internet (check security groups / firewall
+rules, not just `docker compose ps` showing `caddy` as running) — Let's
+Encrypt's challenge traffic has to actually reach the container. Check
+`docker compose logs caddy` for the specific ACME error if it's still failing
+after DNS has propagated.
+
+**Docker Compose: `web` container works but `GEMINI_API_KEY is not set`**
+Confirm `.env.agent` (not `.env.web`) exists on the host next to `compose.yaml`
+and has all four vars — `compose.yaml` maps each service to a specific
+`env_file`, so a var in the wrong file silently doesn't reach that service.
