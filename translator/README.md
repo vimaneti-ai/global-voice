@@ -42,6 +42,13 @@ uv run ruff check      # lint
 uv run ruff format     # format
 ```
 
+## CI
+
+Every PR to `develop` or `main` runs `uv run ruff check`, `uv run ruff format --check`,
+and `uv run pytest` for this directory — see the `translator` job in the root
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Run the same three
+locally before pushing (see [Test and lint](#test-and-lint) above).
+
 ## Deploy
 
 To [LiveKit Cloud Agents](https://docs.livekit.io/agents/ops/deployment/):
@@ -52,6 +59,10 @@ lk agent deploy
 ```
 
 The included `Dockerfile` is also suitable for any container host. Set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and `GEMINI_API_KEY` on the host.
+
+Or run this alongside the frontend and a TLS-terminating reverse proxy in one
+shot — see the repo root's [`compose.yaml`](../compose.yaml) and
+[SETUP.md](../SETUP.md#all-in-one-with-docker-compose--caddy).
 
 ## Working with coding agents
 
