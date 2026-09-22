@@ -16,8 +16,8 @@ import pytest
 # Make `src/` importable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from config import NATIVE_LANG, PARTICIPANT_LANG_ATTR  # noqa: E402
-from router import TranslationRouter  # noqa: E402
+from config import NATIVE_LANG, PARTICIPANT_LANG_ATTR
+from router import TranslationRouter
 
 
 def _fake_participant(identity: str, lang: str | None, *, mic_muted: bool = False):
@@ -57,10 +57,6 @@ def _router_with(participants):
 
 
 def test_no_listeners_means_no_sessions():
-    p1 = _fake_participant("alice", "en")
-    p2 = _fake_participant("bob", "es")
-    # Both have lang set, but for the "listener" view, "lang" is used as both
-    # speak and listen. So actually they ARE listeners. Adjust: empty room.
     router = _router_with([])
     assert router._compute_desired_sessions() == set()
 
