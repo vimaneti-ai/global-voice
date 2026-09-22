@@ -5,10 +5,7 @@ import {
   useLocalParticipant,
   useRoomContext,
 } from "@livekit/components-react";
-import { Track } from "livekit-client";
 import {
-  CamOffIcon,
-  CamOnIcon,
   CaptionsIcon,
   LeaveIcon,
   LinkIcon,
@@ -27,21 +24,13 @@ export default function ControlBar({
   captionsOpen: boolean;
   onToggleCaptions: () => void;
 }) {
-  const { localParticipant, microphoneTrack, cameraTrack } = useLocalParticipant();
+  const { localParticipant, microphoneTrack } = useLocalParticipant();
   const room = useRoomContext();
   const [copied, setCopied] = useState(false);
 
   const micOn = !!microphoneTrack && !microphoneTrack.isMuted;
-  const camOn =
-    !!cameraTrack &&
-    cameraTrack.source === Track.Source.Camera &&
-    !cameraTrack.isMuted;
-
   async function toggleMic() {
     await localParticipant.setMicrophoneEnabled(!micOn);
-  }
-  async function toggleCam() {
-    await localParticipant.setCameraEnabled(!camOn);
   }
   async function copyInvite() {
     try {
@@ -64,12 +53,6 @@ export default function ControlBar({
         onClick={toggleMic}
         label={micOn ? "Mic on" : "Mic off"}
         icon={micOn ? <MicOnIcon /> : <MicOffIcon />}
-      />
-      <CtrlButton
-        active={camOn}
-        onClick={toggleCam}
-        label={camOn ? "Camera on" : "Camera off"}
-        icon={camOn ? <CamOnIcon /> : <CamOffIcon />}
       />
       <CtrlButton
         active={captionsOpen}

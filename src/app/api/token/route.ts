@@ -3,6 +3,7 @@ import {
   AccessToken,
   RoomConfiguration,
   RoomAgentDispatch,
+  TrackSource,
 } from "livekit-server-sdk";
 
 // Session caps (mirrors src/lib/config.ts on the client). Hardcoded here to
@@ -46,13 +47,12 @@ export async function GET(req: NextRequest) {
     ttl: SESSION_TTL_SECONDS,
   });
 
-  // Peer model (grill Q7): every participant can publish audio + video and
-  // subscribe; can update their own attributes (used to broadcast their
-  // chosen language to the agent + other peers).
+  // Voice-only peers can publish microphone audio, subscribe, and update their
+  // own attributes (used to broadcast language to the agent + other peers).
   at.addGrant({
     roomJoin: true,
     room,
-    canPublish: true,
+    canPublishSources: [TrackSource.MICROPHONE],
     canPublishData: true,
     canSubscribe: true,
     canUpdateOwnMetadata: true,

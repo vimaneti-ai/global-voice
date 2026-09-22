@@ -34,26 +34,6 @@ export function MicOffIcon() {
   );
 }
 
-export function CamOnIcon() {
-  return (
-    <svg {...baseProps}>
-      <rect x="3" y="6" width="13" height="12" rx="2" />
-      <path d="M16 10l5-2v8l-5-2z" />
-    </svg>
-  );
-}
-
-export function CamOffIcon() {
-  return (
-    <svg {...baseProps}>
-      <path d="M16 10l5-2v8l-5-2v-4" />
-      <path d="M16 16v-2.5" />
-      <rect x="3" y="6" width="13" height="12" rx="2" />
-      <path d="M3 3l18 18" />
-    </svg>
-  );
-}
-
 export function LinkIcon() {
   return (
     <svg {...baseProps}>
