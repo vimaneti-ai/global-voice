@@ -1,5 +1,5 @@
 # Merge Conflict Practice
 
-Deployment environment: production
+Deployment environments: development and production
 
-This version was written on the main branch.
+This file was intentionally changed on both branches to practise resolving a merge conflict.
