@@ -171,5 +171,4 @@ This is self-hosted example software with no accounts and no database.
 
 ## License
 
-MIT
-Licence
+MIT Licence
